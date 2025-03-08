@@ -15,8 +15,8 @@ A tool for automatically processing and analyzing content across multiple catego
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/sap200-reasoning-processor.git
-   cd sap200-reasoning-processor
+   git clone https://github.com/TinkAnet/LLM_Severity_Calculation.git
+   cd LLM_Severity_Calculation
    ```
 
 2. Create and activate a virtual environment:
