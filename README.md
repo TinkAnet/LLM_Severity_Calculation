@@ -61,6 +61,12 @@ A tool for automatically processing and analyzing content across multiple catego
 ## Usage
 
 Run the script to automatically process all categories:
+```bash
+python3 reasoning.py
+or
+python3 reasoning_auto.py
+```
+
 
 The script will:
 1. Start a web server for status monitoring at http://localhost:8080
