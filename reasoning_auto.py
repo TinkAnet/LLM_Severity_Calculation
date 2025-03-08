@@ -19,7 +19,13 @@ processing_status = {
     "total_entries_processed": 0,
     "start_time": None,
     "recent_results": [],
-    "is_running": False
+    "is_running": False,
+    "current_details": {
+        "prompt": "",
+        "implicit_response": "",
+        "explicit_response": "",
+        "severity_score": 0
+    }
 }
 
 # Server port
@@ -343,6 +349,9 @@ def process_severity(input_data, category, mu_k=None, alpha=1, verbose=False):
     # Apply category-specific severity calculation
     final_severity, metrics = calculate_severity(severity_list, category, verbose)
 
+    processing_status["current_details"]["explicit_response"] = input_data
+    processing_status["current_details"]["severity_score"] = round(final_severity, 2)
+
     if verbose:
         print(f"\nFinal severity score: {round(final_severity, 2)}")
 
@@ -357,6 +366,7 @@ def process_implicit_analysis(attack_prompt):
     print(f"Processing Implicit Judgment for Prompt:\n{attack_prompt}\n")
     
     processing_status["current_entry"] = f"Implicit Analysis: {attack_prompt[:50]}..."
+    processing_status["current_details"]["prompt"] = attack_prompt
     
     api_request_json = {
         "model": "llama3.3-70b",
@@ -373,6 +383,7 @@ def process_implicit_analysis(attack_prompt):
         response_data = response.json()
         implicit_content = response_data["choices"][0]["message"]["content"]
         print(f"[Implicit Response]:\n{implicit_content}\n")
+        processing_status["current_details"]["implicit_response"] = implicit_content
         return implicit_content
     except Exception as e:
         print(f"[Error] Implicit analysis failed: {e}")
@@ -788,6 +799,9 @@ def status_page():
             th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
             th { background-color: #f2f2f2; }
             .refusal { background-color: #ffeeee; }
+            .detail-box { background: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; padding: 15px; margin: 15px 0; }
+            .detail-box pre { white-space: pre-wrap; overflow-wrap: break-word; background: #fff; padding: 10px; border-radius: 3px; }
+            .score { font-size: 1.2em; font-weight: bold; }
         </style>
     </head>
     <body>
@@ -804,6 +818,21 @@ def status_page():
             <p><span class="status-label">Current Category:</span> {{ current_category }}</p>
             <p><span class="status-label">Current Task:</span> {{ current_entry }}</p>
             <p><span class="status-label">Total Entries Processed:</span> {{ total_entries_processed }}</p>
+        </div>
+        
+        <h2>Current Processing Details</h2>
+        <div class="detail-box">
+            <h3>Prompt:</h3>
+            <pre>{{ current_details.prompt }}</pre>
+            
+            <h3>Implicit Response:</h3>
+            <pre>{{ current_details.implicit_response }}</pre>
+            
+            <h3>Explicit Analysis:</h3>
+            <pre>{{ current_details.explicit_response }}</pre>
+            
+            <h3>Severity Score:</h3>
+            <div class="score">{{ current_details.severity_score }}</div>
         </div>
         
         <h2>Recent Results</h2>
@@ -841,7 +870,8 @@ def status_page():
         start_time=processing_status["start_time"].strftime("%Y-%m-%d %H:%M:%S") if processing_status["start_time"] else None,
         elapsed_time=elapsed_time,
         recent_results=processing_status["recent_results"],
-        is_running=processing_status["is_running"]
+        is_running=processing_status["is_running"],
+        current_details=processing_status["current_details"]
     )
 
 @app.route('/api/status')
