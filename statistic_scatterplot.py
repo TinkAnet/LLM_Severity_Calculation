@@ -30,22 +30,21 @@ json_files = glob.glob(os.path.join(output_dir, "*.json"))
 # Dictionary to store category and its severity scores (as lists for multiple scores)
 category_scores = defaultdict(list)
 
-# Function to recursively search for all instances of a key in a nested dictionary
-def find_all_keys_in_dict(data, target_key, results=None):
-    if results is None:
-        results = []
+# Function to extract exactly one final severity score per entry
+def extract_final_scores(data):
+    if not isinstance(data, list):
+        return []
     
-    if isinstance(data, dict):
-        for key, value in data.items():
-            if isinstance(key, str) and key == target_key:
-                results.append(value)
-            if isinstance(value, (dict, list)):
-                find_all_keys_in_dict(value, target_key, results)
-    elif isinstance(data, list):
-        for item in data:
-            find_all_keys_in_dict(item, target_key, results)
+    scores = []
+    for entry in data:
+        if isinstance(entry, dict) and "Final Severity Score" in entry:
+            try:
+                score = float(entry["Final Severity Score"])
+                scores.append(score)  # Include all scores, even zeros
+            except (ValueError, TypeError):
+                print(f"  Error: Invalid severity score: {entry['Final Severity Score']}")
     
-    return results
+    return scores
 
 # Process each JSON file
 print(f"Found {len(json_files)} JSON files to process")
@@ -62,31 +61,11 @@ for json_file in json_files:
                 print(f"Processing {json_file}...")
                 data = json.load(f)
                 
-                # Try to find all severity scores in the file
-                severity_scores = []
-                
-                # Try different possible keys
-                for possible_key in ["Final Severity Score", "final_severity_score", 
-                                   "severity_score", "severity", "score"]:
-                    found_values = find_all_keys_in_dict(data, possible_key)
-                    if found_values:
-                        print(f"  Found {len(found_values)} severity scores under key: {possible_key}")
-                        severity_scores.extend(found_values)
-                
-                # If we didn't find any scores, print debug info
-                if not severity_scores:
-                    print(f"  Could not find any severity scores in {json_file}")
-                    continue
-                
-                # Convert to float and add valid scores to the category
-                for score in severity_scores:
-                    try:
-                        float_score = float(score)
-                        category_scores[category].append(float_score)
-                    except (ValueError, TypeError):
-                        print(f"  Error: Severity score '{score}' is not a valid number")
+                # Extract exactly one final severity score per entry
+                category_scores[category] = extract_final_scores(data)
                 
                 print(f"  Category: {category}, Found {len(category_scores[category])} valid scores")
+                print(f"  Verify count: This should be close to 200. Actual count: {len(category_scores[category])}")
                 
         except Exception as e:
             print(f"Error processing {json_file}: {str(e)}")
@@ -153,7 +132,7 @@ for category, scores in category_scores.items():
     print(f"Created scatter plot for {category}")
 
 # Create a summary scatter plot comparing all categories
-plt.figure(figsize=(10, 7))
+plt.figure(figsize=(12, 7))  # Wider figure to accommodate the legend
 
 # Prepare data for combined scatter plot
 all_categories = list(category_scores.keys())
@@ -174,7 +153,7 @@ for i, (category, scores) in enumerate(category_scores.items()):
 
 plt.xlabel('Category')
 plt.ylabel('Severity Score')
-plt.title('Severity Scores Across All Categories')
+#plt.title('Severity Scores Across All Categories')
 plt.grid(True, linestyle='--', alpha=0.6)
 plt.xticks(np.arange(1, len(all_categories) + 1), [cat.capitalize() for cat in all_categories], rotation=45, ha='right')
 
@@ -184,11 +163,13 @@ for spine in plt.gca().spines.values():
     spine.set_color('black')
     spine.set_linewidth(1.0)
 
-plt.legend(loc='best', frameon=True, framealpha=0.9, edgecolor='lightgray')
+# Position legend to the right of the plot instead of on top of it
+plt.legend(loc='center left', bbox_to_anchor=(1.02, 0.5), frameon=True, framealpha=0.9, edgecolor='lightgray')
+
 plt.tight_layout()
 
-# Save the summary scatter plot to the graph directory
-plt.savefig(os.path.join(graph_dir, 'severity_scores_all_categories.png'), dpi=300)
+# Save the summary scatter plot to the graph directory with extra space for the legend
+plt.savefig(os.path.join(graph_dir, 'severity_scores_all_categories.png'), dpi=300, bbox_inches='tight')
 
 print("Created summary scatter plot for all categories")
 print(f"\nAll scatter plots saved to {graph_dir}/ directory")
