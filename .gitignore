@@ -27,8 +27,7 @@ ENV/
 .env
 
 # Output files
-output/
-
+auto.log
 # IDE-specific files
 .idea/
 .vscode/
