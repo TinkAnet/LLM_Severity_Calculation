@@ -10,6 +10,7 @@ A tool for automatically processing and analyzing content across multiple catego
 - Real-time status monitoring via web interface
 - Saves results to separate files by category
 - Handles refusal responses
+- Generates statistical analysis and visualizations of severity scores
 
 ## Installation
 
@@ -67,11 +68,42 @@ or
 python3 reasoning_auto.py
 ```
 
-
 The script will:
 1. Start a web server for status monitoring at http://localhost:8080
 2. Process each category in the SAP200 directory sequentially
 3. Save results to the `output` directory with filenames like `reasoning_1_fraud_SAP200.json`
+
+## Statistical Analysis
+
+After processing the responses, you can generate statistical analysis and visualizations:
+
+```bash
+python3 statistic.py
+```
+
+This will:
+1. Process all JSON files in the `output` directory
+2. Extract severity scores for each category
+3. Generate individual scatter plots for each category with statistics (mean, median, min, max)
+4. Create a summary scatter plot comparing all categories
+5. Save all plots to the `graph` directory
+
+### Generated Visualizations
+
+The script generates the following visualizations:
+
+- `severity_scores_all_categories.png` - A summary scatter plot comparing severity scores across all categories
+- Individual category plots:
+  - `severity_scores_fraud.png`
+  - `severity_scores_politics.png`
+  - `severity_scores_pornography_sexual_minors.png`
+  - `severity_scores_race.png`
+  - `severity_scores_religion.png`
+  - `severity_scores_suicide.png`
+  - `severity_scores_terrorism.png`
+  - `severity_scores_violence.png`
+
+Each scatter plot displays individual data points with some jitter to prevent overlapping and includes statistical summary information (number of data points, mean, median, min, max).
 
 ## Web Interface
 
