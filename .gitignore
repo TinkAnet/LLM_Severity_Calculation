@@ -34,3 +34,4 @@ auto.log
 *.swp
 *.swo
 .DS_Store
+*.log
